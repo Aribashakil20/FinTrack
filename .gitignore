@@ -1,0 +1,32 @@
+# Maven
+fintrack-backend/target/
+fintrack-backend/.mvn/
+*.class
+
+# Node
+fintrack-nextjs/node_modules/
+fintrack-frontend/node_modules/
+fintrack-nextjs/.next/
+fintrack-nextjs/out/
+fintrack-frontend/dist/
+
+# Environment
+.env
+.env.local
+.env.production
+!.env.example
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

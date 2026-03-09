@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+
+  # ── MySQL ────────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: fintrack-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: fintrack_db
+      MYSQL_USER: ${DB_USERNAME:-fintrack}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-fintrack123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Spring Boot Backend ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./fintrack-backend
+      dockerfile: Dockerfile
+    container_name: fintrack-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_USERNAME: ${DB_USERNAME:-fintrack}
+      DB_PASSWORD: ${DB_PASSWORD:-fintrack123}
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production_super_secret}
+      CORS_ORIGINS: http://localhost:3000
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/fintrack_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    ports:
+      - "8080:8080"
+
+  # ── Next.js Frontend ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./fintrack-nextjs
+      dockerfile: Dockerfile
+    container_name: fintrack-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8080
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:
